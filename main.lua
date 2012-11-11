@@ -54,8 +54,8 @@ local olderVersion = tonumber(string.sub( platformVersion, 1, 1 )) < 4
 
 
 if onSimulator then
-	--_G.app_server = "http://localhost:3000/"
-	--_G.message_server = "http://localhost:9292/faye"
+	_G.app_server = "http://localhost:3000/"
+	_G.message_server = "http://localhost:9292/faye"
 	_G.load_time = 0
 end
 
@@ -114,12 +114,14 @@ function _G.subscribeToGameChannelEventHandler(event)
 	if ( event.isError ) then
     	print( "!!! Error subscribing to game channel !!!")
     	print ( "RESPONSE: " .. event.response )
+    	_G.current_game["subscribed"] = false
     else
     	print( "Subscribed to game channel successfully...")
     	print ( "RESPONSE: " .. event.response )
         if (event.status == 200) then
         	local data = {}
         	data = json.decode(event.response)[1];	
+        	_G.current_game["subscribed"] = true
         end   
     end
 end
@@ -151,6 +153,7 @@ function _G.gameChannelEventHandler(event)
         				event["lat"] = data.center[2]
         				event["width"] = data.width
         				event["height"] = data.height
+        				
         			end
         			_G.current_game:dispatchEvent(event)
         		end
@@ -266,6 +269,10 @@ _G.gMap.isVisible = false
 
 
 _G.game_settings = utilities.loadData("scatter_settings.json")
+
+if onSimulator then
+	_G.game_settings = {}
+end
 
 if (_G.game_settings == nil or _G.game_settings.session_id == nil or _G.game_settings.session_id == "") then
 	controller.getSessionID(getSessionIDResponseHandler)

@@ -109,6 +109,34 @@ function Controller.subscribeToGameChannel(client_id, channel_id, subscribeToGam
 end
 
 
+function Controller.unsubscribeFromGameChannel(client_id, channel_id, unsubscribeFromGameChannelEventHandler)
+	local params = {}
+    local headers = {}
+    local data = {}
+    local message = {}
+    
+    headers["Content-Type"] = "application/json"
+    
+    data["clientId"] = client_id
+    data["channel"] = "/meta/unsubscribe"
+    data["subscription"] = channel_id
+    data["id"] = _G.message_id
+    _G.message_id = _G.message_id + 1
+    
+    message[1] = data
+        
+    params.headers = headers
+    params.body = json.encode(message)
+
+    print("Unsubscribing from the game channel...")
+    print(params.body)
+    
+    native.setActivityIndicator(true)
+    network.request( _G.message_server, "POST", unsubscribeFromGameChannelEventHandler, params)
+    return 0
+end
+
+
 function Controller.connectToGameChannel(connectToGameChannelEventHandler)
 	local params = {}
     local headers = {}

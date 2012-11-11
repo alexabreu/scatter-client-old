@@ -14,14 +14,49 @@ function Game.new(id, channel_id, total_player_count, current_player_count, game
     base["game_time"] = game_time
     base["status"] = "initializing"
     base["is_player_in_game"] = true
+    base["subscribed"] = false
     
-        
-    function base:leaveBeforeStart()
+    
+    function base.leaveGameEventHandler(event)
+		native.setActivityIndicator(false)
+		print(event.response)
+		if ( event.isError ) then
+	    	print( "!!! Error leaving quick game !!!" )
+	    	print ("RESPONSE: " .. event.response )
+	    else
+	        if (event.status == 200) then
+	        	print( "Successfully left quick game before start..." )
+	        	print ("RESPONSE: " .. event.response )
+	        	base["status"] = "left"
+	        end        
+	    end
+	end
+	
+	function base.unsubscribeFromGameChannelEventHandler(event)
+		native.setActivityIndicator(false)
+		print(event.response)
+		if ( event.isError ) then
+	    	print( "!!! Error unsubscribing from game !!!" )
+	    	print ("RESPONSE: " .. event.response )
+	    else
+	        if (event.status == 200) then
+	        	print( "Successfully unsubscribed from game..." )
+	        	print ("RESPONSE: " .. event.response )
+	        	base["subscribed"] = false
+	        end        
+	    end
+	end
+	
+    function base:leaveBeforeStart(unsubscribeFromGameChannelEventHandler)
+    	_G.controller.leaveGame(base.leaveGameEventHandler)
+    	_G.controller.unsubscribeFromGameChannel(_G.client_id, base["channel_id"], base.unsubscribeFromGameChannelEventHandler)
     	 base["is_player_in_game"] = false
     	_G.in_game = false
-    	_G.current_game = {}
+
     end
-      
+    
+    
+    
     return base
 end
  

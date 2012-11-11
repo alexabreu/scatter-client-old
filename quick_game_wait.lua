@@ -16,6 +16,8 @@ local stage = display.getCurrentStage()
 local current_player_count = nil
 local game = {}
 
+local bg, text, cancel_quick_game_button, current_player_count
+
 -----------------------------------------------------------------------------------------
 -- BEGINNING OF YOUR IMPLEMENTATION
 -- 
@@ -39,26 +41,9 @@ local function gameStartEventListener( event )
 end
 
 
-
-local function leaveGameEventHandler(event)
-	native.setActivityIndicator(false)
-	print(event.response)
-	if ( event.isError ) then
-    	print( "!!! Error leaving quick game !!!" )
-    	print ("RESPONSE: " .. event.response )
-    else
-        if (event.status == 200) then
-        	print( "Successfully left quick game before start..." )
-        	print ("RESPONSE: " .. event.response )
-        end        
-    end
-end
-
-
 local cancelQuickGameButtonHandler = function (event )
     if event.phase == "release" then
         print( "Pressed cancel quick game button..." )
-        _G.controller.leaveGame(leaveGameEventHandler)
         game:leaveBeforeStart()
         _G.tab_bar:pressButton( 1, true )
     end
@@ -70,31 +55,24 @@ end
 function scene:createScene( event )
 	local group = self.view
 
-	game = event.params.game
-	
-	print ("Waiting for players " .. game.current_player_count .. " of " .. game.total_player_count)
-	
-	game:addEventListener( "game#join", newPlayerEventListener )
-	game:addEventListener( "game#started", gameStartEventListener )
-	
-	local bg = display.newImageRect(_G.image_path .. "home_bg.png", 320, 480)
+	bg = display.newImageRect(_G.image_path .. "home_bg.png", 320, 480)
 	bg:setReferencePoint(display.TopLeftReferencePoint)
 	bg.x = 0; bg.y = 0;
 	bg:setReferencePoint(display.CenterReferencePoint)
 	
-	local text = display.newImageRect(_G.image_path .. "home_wait.png", 195, 140)
+	text = display.newImageRect(_G.image_path .. "home_wait.png", 195, 140)
 	text:setReferencePoint(display.TopLeftReferencePoint)
 	text.x = stage.contentWidth/2 - text.width/2; text.y = stage.contentHeight/3 - text.height;
 	text:setReferencePoint(display.CenterReferencePoint)
 	
-	current_player_count = display.newRetinaText(game.current_player_count .. " / " .. game.total_player_count, 0, 0, text.width, 0, _G.fonts[1], 80)
+	current_player_count = display.newRetinaText("",0,0, "Grinched",80)
 	current_player_count:setReferencePoint(display.CenterReferencePoint)
 	current_player_count.x = text.x
 	current_player_count.y = text.y + text.height + 2*_G.gui_padding
 	current_player_count:setTextColor(_G.colors["purple"][1],_G.colors["purple"][2],_G.colors["purple"][3],_G.colors["purple"][4])
 	
 	
-	local cancel_quick_game_button = widget.newButton{
+	cancel_quick_game_button = widget.newButton{
 		id = "cancel_quick_game_button",
         default = _G.image_path .. "btn_cancel.png",
         over = _G.image_path .. "btn_cancel_over.png",
@@ -119,11 +97,25 @@ end
 -- Called immediately after scene has moved onscreen:
 function scene:enterScene( event )
 	local group = self.view
+	
+	game = event.params.game
+	
+	print ("Waiting for players " .. game.current_player_count .. " of " .. game.total_player_count)
+	
+	game:addEventListener( "game#join", newPlayerEventListener )
+	game:addEventListener( "game#started", gameStartEventListener )
+	
+	current_player_count.text = game.current_player_count .. " / " .. game.total_player_count
+
 end
 
 -- Called when scene is about to move offscreen:
 function scene:exitScene( event )
 	local group = self.view
+	
+	game:removeEventListener( "game#join", newPlayerEventListener )
+	game:removeEventListener( "game#started", gameStartEventListener )
+	
 	-- INSERT code here (e.g. stop timers, remove listenets, unload sounds, etc.)
 	
 end
