@@ -42,10 +42,10 @@ function Controller.getSessionID(getSessionIDResponseHandler)
     params.headers = headers
     params.body = json.encode(data)
     
-    print (_G.app_server .. "api/v1/session")
+    print (_G.app_server .. "api/v1/debug")
     
     native.setActivityIndicator(true)
-    network.request( _G.app_server .. "api/v1/session", "GET", getSessionIDResponseHandler)
+    network.request( _G.app_server .. "api/v1/debug", "GET", getSessionIDResponseHandler)
 end
 
 

@@ -8,6 +8,7 @@ local storyboard = require( "storyboard" )
 local widget = require( "widget" )
 local json = require( "json" )
 local game = require( "com.scatter.game" )
+local utilities = require( "com.scatter.utilities" )
 
 local scene = storyboard.newScene()
 local stage = display.getCurrentStage()
@@ -36,6 +37,7 @@ local function quickGameEventHandler(event)
         	if (data ~= nil and data.game ~= nil and data.game.status == "initializing") then
         		print(event.response)
         		local game = game.new(data.game.id, data.game.channel_id, data.game.player_count, data.player_count, _G.default_game_time)
+        		utilities.printTable(game)
         		_G.current_game = game
         		_G.in_game = true
         		_G.channel_id = data.game.channel_id

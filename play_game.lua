@@ -75,6 +75,12 @@ local pingLocation = function()
 	_G.controller.pingLocation(game, _G.current_location, pingLocationEventHandler)
 end
 
+
+--local syncGame = function()
+--	_G.controller.syncGame(game, syncGameEventHandler)
+--end
+
+
 -- Called when the scene's view does not exist:
 function scene:createScene( event )
 	local group = self.view

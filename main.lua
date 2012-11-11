@@ -54,8 +54,8 @@ local olderVersion = tonumber(string.sub( platformVersion, 1, 1 )) < 4
 
 
 if onSimulator then
-	_G.app_server = "http://localhost:3000/"
-	_G.message_server = "http://localhost:9292/faye"
+	--_G.app_server = "http://localhost:3000/"
+	--_G.message_server = "http://localhost:9292/faye"
 	_G.load_time = 0
 end
 

@@ -8,6 +8,7 @@ local storyboard = require( "storyboard" )
 local widget = require( "widget" )
 local json = require( "json" )
 local game = require( "com.scatter.game" )
+local utilities = require( "com.scatter.utilities" )
 
 local scene = storyboard.newScene()
 local stage = display.getCurrentStage()
@@ -24,6 +25,7 @@ local game = {}
 -----------------------------------------------------------------------------------------
 
 local function newPlayerEventListener( event )
+	utilities.printTable(event)
     current_player_count.text = event.current_player_count .. " / " .. game.total_player_count
 end
 
