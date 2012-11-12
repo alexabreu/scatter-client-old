@@ -15,6 +15,7 @@ function Game.new(id, channel_id, total_player_count, current_player_count, game
     base["status"] = "initializing"
     base["is_player_in_game"] = true
     base["subscribed"] = false
+    base["elapsed_time"] = 0
     
     
     function base.leaveGameEventHandler(event)

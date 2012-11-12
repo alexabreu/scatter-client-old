@@ -35,7 +35,7 @@ local avatarButtonHandler = function (event)
 			effect="slideLeft",
 			time = 300,
 		}
-        storyboard.gotoScene("home", options)
+        _G.tab_bar:pressButton( 1, true )
         --if (event.target.avatar_id == 1) then
         --	 
         --elseif (event.target.avatar_id == 2) then

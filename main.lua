@@ -16,9 +16,9 @@ io.output():setvbuf("no")
 
 _G.app_server = "http://playscatter.herokuapp.com/"
 _G.message_server = "http://messagescatter.herokuapp.com/faye"
-_G.image_path = "assets/images@2x/"
+_G.image_path = "assets/images/"
 _G.load_time = 2500
-_G.default_game_time = 5
+_G.default_game_time = 3*60
 
 _G.game_settings = {}
 _G.current_location = {}
@@ -40,6 +40,7 @@ _G.colors["purple"] = {102, 51, 204, 255}
 _G.colors["label"] = {121, 0, 202, 255}
 
 _G.fonts[1] = "Grinched"
+_G.fonts[2] = "Impact"
 
 _G.tab_bar = {}
 
@@ -48,15 +49,21 @@ _G.controller = controller
 
 _G.map = {}
 
-local onSimulator = system.getInfo( "environment" ) == "simulator"
+local onSimulator = false
+
+if ( system.getInfo( "environment" ) == "simulator" or system.getInfo ( "model" ) == "iPhone Simulator" ) then
+	onSimulator = true
+end
+
 local platformVersion = system.getInfo( "platformVersion" )
 local olderVersion = tonumber(string.sub( platformVersion, 1, 1 )) < 4
 
 
+print ("onSimulator: " .. tostring(onSimulator))
 if onSimulator then
 	_G.app_server = "http://localhost:3000/"
 	_G.message_server = "http://localhost:9292/faye"
-	_G.load_time = 0
+	_G.load_time = 500
 end
 
 -- if on older device (and not on simulator) ...
@@ -144,17 +151,12 @@ function _G.gameChannelEventHandler(event)
         			event["name"] = data.event
         			if (data.event == "game#join") then
         				print ("Someone joined the game...")
-        				utilities.printTable (data)
         				event["current_player_count"] = data.player_count
         			elseif (data.event == "game#started") then
         				print ("Game started...")
-        				utilities.printTable (data)
-        				event["lat"] = data.center[1]
-        				event["lat"] = data.center[2]
-        				event["width"] = data.width
-        				event["height"] = data.height
-        				
+        				_G.current_game.game_time = data.time			
         			end
+        			utilities.printTable (data)
         			_G.current_game:dispatchEvent(event)
         		end
         	end
@@ -174,19 +176,26 @@ function _G.mapAddressEventHandler( event )
 end
 
 function _G.locationEventHandler( event )
-	_G.current_location = event
-	print ("LAT: " .. event.latitude .. ", LNG: " .. event.longitude)
+	if (onSimulator) then
+		local l = {}
+		l["latitude"] = 33.419650
+		l["longitude"] = -111.93357
+		_G.current_location = l
+	else
+		_G.current_location = event
+	end
+	--print ("LAT: " .. _G.current_location.latitude .. ", LNG: " .. _G.current_location.longitude)
 	_G.map:nearestAddress(_G.current_location.latitude, _G.current_location.longitude)
 end
 
 -- event listeners for tab buttons:
 
 local function onHomeView( event )
-	storyboard.gotoScene( "home", "fromLeft", 300 )
+	storyboard.gotoScene( "home", "slideLeft", 300 )
 end
 
 local function onCreateGameView( event )
-	storyboard.gotoScene( "create_game", "fromLeft", 300 )
+	storyboard.gotoScene( "create_game", "slideLeft", 300 )
 end
 
 local function onPlayGameView( event )
@@ -199,15 +208,15 @@ local function onPlayGameView( event )
 end
 
 local function onJoinGameView( event )
-	storyboard.gotoScene( "join_game", "fromLeft", 300 )
+	storyboard.gotoScene( "join_game", "slideLeft", 300 )
 end
 
 local function onProfileView( event )
-	storyboard.gotoScene( "profile", "fromLeft", 300 )
+	storyboard.gotoScene( "profile", "slideLeft", 300 )
 end
 
 local function onChooseAvatarView( event )
-	storyboard.gotoScene( "choose_avatar", "fromLeft", 300 )
+	storyboard.gotoScene( "choose_avatar", "slideLeft", 300 )
 end
 
 local function onQuickGameWaitView( event )
@@ -224,12 +233,12 @@ end
 
 -- table to setup buttons
 local tabButtons = {
-	{up=_G.image_path.."btn_home.png", down=_G.image_path.."btn_home_over.png", width = 32, height = 32, onPress=onHomeView, selected=true },
+	{up=_G.image_path.."bottomMenu_home.png", down=_G.image_path.."bottomMenu_home_over.png", width = 32, height = 32, onPress=onHomeView, selected=true },
 	--{up="icon2.png", down="icon2-down.png", width = 32, height = 32, onPress=onCreateGameView, selected=true },
 	--{up="icon1.png", down="icon1-down.png", width = 32, height = 32, onPress=onJoinGameView, selected=false},
-	{up="icon1.png", down="icon1-down.png", width = 32, height = 32, onPress=onPlayGameView, selected=false},
-	{up=_G.image_path.."btn_preference.png", down=_G.image_path.."btn_preference_over.png", width = 32, height = 32, onPress=onChooseAvatarView, selected=false},
-	{up=_G.image_path.."btn_preference.png", down=_G.image_path.."btn_preference_over.png", width = 32, height = 32, onPress=onQuickGameWaitView, selected=false},	
+	{up=_G.image_path.."bottomMenu_preference.png", down=_G.image_path.."bottomMenu_preference_over.png", width = 32, height = 32, onPress=onPlayGameView, selected=false},
+	{up=_G.image_path.."bottomMenu_mypage.png", down=_G.image_path.."bottomMenu_mypage_over.png", width = 32, height = 32, onPress=onChooseAvatarView, selected=false},
+	{up=_G.image_path.."bottomMenu_preference.png", down=_G.image_path.."bottomMenu_preference_over.png", width = 32, height = 32, onPress=onQuickGameWaitView, selected=false},	
 }
 
 _G.tab_bar = widget.newTabBar {
@@ -257,14 +266,18 @@ logo.x = 0; logo.y = 0;
 logo:setReferencePoint(display.CenterReferencePoint)
 
 
-_G.map = native.newMapView(0, 0, stage.contentWidth, stage.contentHeight - _G.tab_bar.height)
+_G.map = native.newMapView(0, 0, stage.contentWidth, stage.contentHeight - 2*_G.tab_bar.height)
 _G.map.isVisible = false
 Runtime:addEventListener( "mapAddress", _G.mapAddressEventHandler )
 Runtime:addEventListener( "location", _G.locationEventHandler )
 
 
-_G.gMap = native.newWebView(0, 0, stage.contentWidth, stage.contentHeight - 2.5*_G.tab_bar.height)
-_G.gMap:request( "map.html", system.ResourceDirectory )
+_G.gMap = native.newWebView(0, 0, stage.contentWidth, stage.contentHeight - 2*_G.tab_bar.height)
+_G.gMap:setReferencePoint(display.TopLeftReferencePoint)
+_G.gMap.x = 0
+_G.gMap.y = _G.tab_bar.height
+_G.gMap:request(_G.app_server .. "games/1")
+
 _G.gMap.isVisible = false
 
 

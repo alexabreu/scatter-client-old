@@ -60,15 +60,15 @@ function scene:createScene( event )
 	bg.x = 0; bg.y = 0;
 	bg:setReferencePoint(display.CenterReferencePoint)
 	
-	text = display.newImageRect(_G.image_path .. "home_wait.png", 195, 140)
+	text = display.newImageRect(_G.image_path .. "title_waiting.png", 180, 140)
 	text:setReferencePoint(display.TopLeftReferencePoint)
 	text.x = stage.contentWidth/2 - text.width/2; text.y = stage.contentHeight/3 - text.height;
 	text:setReferencePoint(display.CenterReferencePoint)
 	
-	current_player_count = display.newRetinaText("",0,0, "Grinched",80)
+	current_player_count = display.newRetinaText("",0,0, _G.fonts[2] ,80)
 	current_player_count:setReferencePoint(display.CenterReferencePoint)
 	current_player_count.x = text.x
-	current_player_count.y = text.y + text.height + 2*_G.gui_padding
+	current_player_count.y = text.y + text.height
 	current_player_count:setTextColor(_G.colors["purple"][1],_G.colors["purple"][2],_G.colors["purple"][3],_G.colors["purple"][4])
 	
 	

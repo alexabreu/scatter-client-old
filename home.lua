@@ -36,7 +36,8 @@ local function quickGameEventHandler(event)
         	data = json.decode(event.response);	
         	if (data ~= nil and data.game ~= nil and data.game.status == "initializing") then
         		print(event.response)
-        		local game = game.new(data.game.id, data.game.channel_id, data.game.player_count, data.player_count, _G.default_game_time)
+        		local game = game.new(data.game.id, data.game.channel_id, data.game.player_count, data.player_count)
+        		_G.gMap:request( _G.app_server .. "games/" .. tostring(data.game.id) )
         		utilities.printTable(game)
         		_G.current_game = game
         		_G.in_game = true
@@ -93,15 +94,16 @@ function scene:createScene( event )
 	
 	local quick_game_button = widget.newButton{
 		id = "quick_game_button",
-        default = _G.image_path .. "btn_quickMatch.png",
-        over = _G.image_path .. "btn_quickMatch_over.png",
-        width = 250, height = 230,
+        default = _G.image_path .. "btn_play.png",
+        over = _G.image_path .. "btn_play_over.png",
+        width = 255, height = 240,
         onEvent = quickGameButtonHandler
 	}
 	quick_game_button:setReferencePoint(display.CenterReferencePoint)
 	quick_game_button.x = stage.contentWidth/2
-    quick_game_button.y = stage.contentHeight*1/4
-    
+    quick_game_button.y = stage.contentHeight/2 - quick_game_button.height/5
+
+	
 	
 	--local new_game_button = widget.newButton{
 	--	id = "new_game_button",
