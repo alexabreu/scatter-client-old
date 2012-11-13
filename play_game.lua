@@ -57,8 +57,8 @@ local function pingLocationEventHandler(event)
         	local data = {}
         	data = json.decode(event.response);	
         	if (data ~= nil) then
-        		print ("Successfully pinged location...")
-        		print(event.response)
+        		--print ("Successfully pinged location...")
+        		--print(event.response)
         	else
         		print ("!!! Failed to ping location properly !!!")
         	end
@@ -82,6 +82,10 @@ local broadcastButtonHandler = function (event )
 		}
 		broadcast_button.x = stage.contentWidth - broadcast_button.width/2
 		broadcast_button.y =  broadcast_button.height/2
+		
+		local group = scene.view
+		group:insert(broadcast_button)
+		
 		
         _G.controller.broadcastLocation(game, _G.current_location, broadcastLocationEventHandler)
     end

@@ -28,6 +28,13 @@ local bg, text, cancel_quick_game_button, current_player_count
 
 local function newPlayerEventListener( event )
 	utilities.printTable(event)
+	game.current_player_count = event.current_player_count
+    current_player_count.text = event.current_player_count .. " / " .. game.total_player_count
+end
+
+local function playerLeaveEventListener( event )
+	utilities.printTable(event)
+	game.current_player_count = event.current_player_count
     current_player_count.text = event.current_player_count .. " / " .. game.total_player_count
 end
 
@@ -91,7 +98,6 @@ function scene:createScene( event )
 	group:insert( current_player_count )
 	group:insert( cancel_quick_game_button )
  
-		
 end
 
 -- Called immediately after scene has moved onscreen:
@@ -103,6 +109,7 @@ function scene:enterScene( event )
 	print ("Waiting for players " .. game.current_player_count .. " of " .. game.total_player_count)
 	
 	game:addEventListener( "game#join", newPlayerEventListener )
+	game:addEventListener( "game#leave", playerLeaveEventListener )
 	game:addEventListener( "game#started", gameStartEventListener )
 	
 	current_player_count.text = game.current_player_count .. " / " .. game.total_player_count
@@ -114,7 +121,9 @@ function scene:exitScene( event )
 	local group = self.view
 	
 	game:removeEventListener( "game#join", newPlayerEventListener )
+	game:removeEventListener( "game#leave", playerLeaveEventListener )
 	game:removeEventListener( "game#started", gameStartEventListener )
+	
 	
 	-- INSERT code here (e.g. stop timers, remove listenets, unload sounds, etc.)
 	

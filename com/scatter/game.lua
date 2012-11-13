@@ -3,7 +3,7 @@ local utilities = require("com.scatter.utilities")
 
 local Game = {}
 
-function Game.new(id, channel_id, total_player_count, current_player_count, game_time)
+function Game.new(id, channel_id, total_player_count, current_player_count, game_time, status)
     
 	local base = display.newGroup()
     
@@ -12,7 +12,7 @@ function Game.new(id, channel_id, total_player_count, current_player_count, game
     base["total_player_count"] = total_player_count
     base["current_player_count"] = current_player_count
     base["game_time"] = game_time
-    base["status"] = "initializing"
+    base["status"] = status
     base["is_player_in_game"] = true
     base["subscribed"] = false
     base["elapsed_time"] = 0

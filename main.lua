@@ -61,8 +61,8 @@ local olderVersion = tonumber(string.sub( platformVersion, 1, 1 )) < 4
 
 print ("onSimulator: " .. tostring(onSimulator))
 if onSimulator then
-	_G.app_server = "http://localhost:3000/"
-	_G.message_server = "http://localhost:9292/faye"
+	--_G.app_server = "http://localhost:3000/"
+	--_G.message_server = "http://localhost:9292/faye"
 	_G.load_time = 500
 end
 
@@ -70,6 +70,7 @@ end
 if not onSimulator and olderVersion then
 	if string.sub( platformVersion, 1, 3 ) ~= "3.2" then
 		_G.fonts[1] = "Helvetica"
+		_G.fonts[2] = "Helvetica"
 	end
 end
 
@@ -139,8 +140,8 @@ function _G.gameChannelEventHandler(event)
     	print ( "RESPONSE: " .. event.response )
         _G.controller.connectToGameChannel(_G.gameChannelEventHandler)
     else
-    	print( "Polled message server successfully...")
-    	print ( "RESPONSE: " .. event.response )
+    	--print( "Polled message server successfully...")
+    	--print ( "RESPONSE: " .. event.response )
         if (event.status == 200) then
         	local response = {}
         	response = json.decode(event.response)
@@ -152,11 +153,14 @@ function _G.gameChannelEventHandler(event)
         			if (data.event == "game#join") then
         				print ("Someone joined the game...")
         				event["current_player_count"] = data.player_count
+        			elseif (data.event == "game#leave") then
+        				print ("Someone left the game...")
+        				event["current_player_count"] = data.player_count
         			elseif (data.event == "game#started") then
         				print ("Game started...")
-        				_G.current_game.game_time = data.time			
+        				_G.current_game.game_time = data.time		
         			end
-        			utilities.printTable (data)
+        			--utilities.printTable (data)
         			_G.current_game:dispatchEvent(event)
         		end
         	end
@@ -236,7 +240,7 @@ local tabButtons = {
 	{up=_G.image_path.."bottomMenu_home.png", down=_G.image_path.."bottomMenu_home_over.png", width = 32, height = 32, onPress=onHomeView, selected=true },
 	--{up="icon2.png", down="icon2-down.png", width = 32, height = 32, onPress=onCreateGameView, selected=true },
 	--{up="icon1.png", down="icon1-down.png", width = 32, height = 32, onPress=onJoinGameView, selected=false},
-	{up=_G.image_path.."bottomMenu_preference.png", down=_G.image_path.."bottomMenu_preference_over.png", width = 32, height = 32, onPress=onPlayGameView, selected=false},
+	--{up=_G.image_path.."bottomMenu_preference.png", down=_G.image_path.."bottomMenu_preference_over.png", width = 32, height = 32, onPress=onPlayGameView, selected=false},
 	{up=_G.image_path.."bottomMenu_mypage.png", down=_G.image_path.."bottomMenu_mypage_over.png", width = 32, height = 32, onPress=onChooseAvatarView, selected=false},
 	{up=_G.image_path.."bottomMenu_preference.png", down=_G.image_path.."bottomMenu_preference_over.png", width = 32, height = 32, onPress=onQuickGameWaitView, selected=false},	
 }
@@ -249,11 +253,20 @@ _G.tab_bar = widget.newTabBar {
 -- create the actual tab_bar widget
 local stage = display.getCurrentStage()
 
-local splash = display.newGroup()
-splash:setReferencePoint(display.TopLeftReferencePoint)
-splash.x = 0; splash.y = 0;
-splash:setReferencePoint(display.CenterReferencePoint)
+_G.map = native.newMapView(0, 0, stage.contentWidth, stage.contentHeight - 2*_G.tab_bar.height)
+_G.map.isVisible = false
+Runtime:addEventListener( "mapAddress", _G.mapAddressEventHandler )
+Runtime:addEventListener( "location", _G.locationEventHandler )
 
+
+_G.gMap = native.newWebView(0, 0, stage.contentWidth, stage.contentHeight - 2*_G.tab_bar.height)
+_G.gMap.isVisible = false
+_G.gMap:setReferencePoint(display.TopLeftReferencePoint)
+_G.gMap.x = 0
+_G.gMap.y = _G.tab_bar.height
+
+
+local splash = display.newGroup()
 
 local bg = display.newImageRect(splash, _G.image_path .. "home_bg.png", 320, 480)
 bg:setReferencePoint(display.TopLeftReferencePoint)
@@ -266,24 +279,11 @@ logo.x = 0; logo.y = 0;
 logo:setReferencePoint(display.CenterReferencePoint)
 
 
-_G.map = native.newMapView(0, 0, stage.contentWidth, stage.contentHeight - 2*_G.tab_bar.height)
-_G.map.isVisible = false
-Runtime:addEventListener( "mapAddress", _G.mapAddressEventHandler )
-Runtime:addEventListener( "location", _G.locationEventHandler )
-
-
-_G.gMap = native.newWebView(0, 0, stage.contentWidth, stage.contentHeight - 2*_G.tab_bar.height)
-_G.gMap:setReferencePoint(display.TopLeftReferencePoint)
-_G.gMap.x = 0
-_G.gMap.y = _G.tab_bar.height
-_G.gMap:request(_G.app_server .. "games/1")
-
-_G.gMap.isVisible = false
-
 
 _G.game_settings = utilities.loadData("scatter_settings.json")
 
-if onSimulator then
+
+if onSimulator or not onSimulator then
 	_G.game_settings = {}
 end
 

@@ -33,10 +33,12 @@ local function quickGameEventHandler(event)
     else
         if (event.status == 200) then
         	local data = {}
-        	data = json.decode(event.response);	
-        	if (data ~= nil and data.game ~= nil and data.game.status == "initializing") then
+        	data = json.decode(event.response);
+        	print (event.response)
+        	if (data ~= nil and data.game ~= nil) then
+        		print ("Successfully joined quick match....")
         		print(event.response)
-        		local game = game.new(data.game.id, data.game.channel_id, data.game.player_count, data.player_count)
+        		local game = game.new(data.game.id, data.game.channel_id, data.game.player_count, data.player_count, _G.default_game_time, data.game.status)
         		_G.gMap:request( _G.app_server .. "games/" .. tostring(data.game.id) )
         		utilities.printTable(game)
         		_G.current_game = game
@@ -44,14 +46,19 @@ local function quickGameEventHandler(event)
         		_G.channel_id = data.game.channel_id
         		_G.controller.subscribeToGameChannel(_G.client_id, _G.channel_id, _G.subscribeToGameChannelEventHandler)
         		
-        		local options =
-				{
+        		
+				local options = {
 				    effect = "slideLeft",
 				    time = 300,
-				    params = { game = game }
+				    params = { game = game },
 				}
-				 
-				storyboard.gotoScene( "quick_game_wait", options )
+				if (game.status == "initializing") then
+					print("Not last player to join, going to waiting room...")			
+					storyboard.gotoScene( "quick_game_wait", options )
+				elseif ( game.status == "started" ) then
+					print("Last player to join, going to game...")	
+				    storyboard.gotoScene("play_game", options)
+				end
 				
         	else
         		print ("!!! Failed to join quick game. Is player already in another game? !!!")
