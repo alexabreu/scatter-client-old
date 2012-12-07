@@ -14,6 +14,8 @@ local stage = display.getCurrentStage()
 
 local avatars = {}
 
+local scatter_sound = audio.loadSound(_G.sound_path .. "scatter.aif")
+
 -----------------------------------------------------------------------------------------
 -- BEGINNING OF YOUR IMPLEMENTATION
 -- 
@@ -100,6 +102,7 @@ end
 -- Called immediately after scene has moved onscreen:
 function scene:enterScene( event )
 	local group = self.view
+	audio.play(scatter_sound)
 end
 
 -- Called when scene is about to move offscreen:

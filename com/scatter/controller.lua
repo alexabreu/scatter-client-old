@@ -49,6 +49,30 @@ function Controller.getSessionID(getSessionIDResponseHandler)
 end
 
 
+
+function Controller.getUserID(getUserIDResponseHandler)
+	print("Requesting user ID...")
+	
+	local params = {}
+    local headers = {}
+    local data = {}
+    
+    headers["Content-Type"] = "application/json; charset=utf-8"
+    headers["Accept-Language"] = "en-US"
+    headers["Accept"] = "application/json"
+    
+    data["auth"] = session_id
+    
+    params.headers = headers
+    params.body = json.encode(data)
+    
+    print (_G.app_server .. "api/v1/whoami")
+    
+    native.setActivityIndicator(true)
+    network.request( _G.app_server .. "api/v1/whoami", "GET", getUserIDResponseHandler)
+end
+
+
 function Controller.handshakeWithMessageServer(handshakeWithMessageServerEventHandler)
 	local params = {}
     local headers = {}
@@ -161,7 +185,7 @@ function Controller.connectToGameChannel(connectToGameChannelEventHandler)
 end
 
 
-function Controller.quickGame(location, quickGameEventHandler)
+function Controller.quickGame(session_id, location, quickGameEventHandler)
 	print("Attempting to play a quick game...")
 
 	local params = {}
@@ -172,7 +196,7 @@ function Controller.quickGame(location, quickGameEventHandler)
     headers["Accept-Language"] = "en-US"
     headers["Accept"] = "application/json"
     
-    data["auth"] = _G.game_settings.session_id
+    data["auth"] = session_id
     local game = {}
     game["lat"] = location.latitude
     game["lng"] = location.longitude
@@ -249,7 +273,7 @@ end
 
 
 function Controller.pingLocation(game_object, location, pingLocationEventHandler)
-	print("Pinging location...")
+	--print("Pinging location...")
 
 	local params = {}
     local headers = {}
@@ -269,8 +293,8 @@ function Controller.pingLocation(game_object, location, pingLocationEventHandler
     params.headers = headers
     params.body = json.encode(data)
 
-    print(_G.app_server .. "api/v1/games/" .. game_object.id .. "/ping.json")
-    print(params.body)
+    --print(_G.app_server .. "api/v1/games/" .. game_object.id .. "/ping.json")
+    --print(params.body)
     
     --native.setActivityIndicator(true)
     network.request( _G.app_server .. "api/v1/games/" .. game_object.id .. "/ping.json", "POST", pingLocationEventHandler, params)

@@ -17,8 +17,12 @@ io.output():setvbuf("no")
 _G.app_server = "http://playscatter.herokuapp.com/"
 _G.message_server = "http://messagescatter.herokuapp.com/faye"
 _G.image_path = "assets/images/"
+_G.video_path = "assets/video/"
+_G.sound_path = "assets/sound/"
 _G.load_time = 2500
-_G.default_game_time = 3*60
+_G.game_end_delay_time = 7500
+_G.default_game_time = 0.1*60
+_G.debug_mode = false
 
 _G.game_settings = {}
 _G.current_location = {}
@@ -30,6 +34,7 @@ _G.message_id = 1
 _G.in_game = false
 _G.games_played = {}
 _G.current_game = {}
+_G.show_intro_video = false
 
 _G.gui_padding = 10
 _G.text_field_height = 30
@@ -61,8 +66,8 @@ local olderVersion = tonumber(string.sub( platformVersion, 1, 1 )) < 4
 
 print ("onSimulator: " .. tostring(onSimulator))
 if onSimulator then
-	--_G.app_server = "http://localhost:3000/"
-	--_G.message_server = "http://localhost:9292/faye"
+	_G.app_server = "http://localhost:3000/"
+	_G.message_server = "http://localhost:9292/faye"
 	_G.load_time = 500
 end
 
@@ -81,7 +86,25 @@ end
 display.setStatusBar( display.HiddenStatusBar )
 
 
-local function getSessionIDResponseHandler(event)
+_G.getUserIDResponseHandler = function(event)
+	native.setActivityIndicator(false)
+	if ( event.isError ) then
+    	print( "!!! An error occured when attempting to get user ID !!!")
+    	print ( "RESPONSE: " .. event.response )
+    else
+    	print( "User ID retrieved succesfully...")
+    	print ( "RESPONSE: " .. event.response )
+        if (event.status == 200) then
+        	local data = {}
+        	data = json.decode(event.response);
+        	_G.game_settings.user_id = data["id"]
+        	utilities.saveData(_G.game_settings, "scatter_settings.json")
+        end   
+    end
+end
+
+
+_G.getSessionIDResponseHandler = function(event)
 	native.setActivityIndicator(false)
 	if ( event.isError ) then
     	print( "!!! An error occured when attempting to retrieve session ID !!!")
@@ -94,6 +117,8 @@ local function getSessionIDResponseHandler(event)
         	data = json.decode(event.response);
         	_G.game_settings.session_id = data["session"]
         	utilities.saveData(_G.game_settings, "scatter_settings.json")
+        	
+        	_G.controller.getUserID(getUserIDResponseHandler)
         end   
     end
 end
@@ -136,14 +161,16 @@ end
 
 function _G.gameChannelEventHandler(event)
 	if ( event.isError ) then
-    	print( "!!! Timeout on connect, we just connect again !!!")
-    	print ( "RESPONSE: " .. event.response )
+    	--print( "!!! Timeout on connect, we just connect again !!!")
+    	--print ( "RESPONSE: " .. event.response )
         _G.controller.connectToGameChannel(_G.gameChannelEventHandler)
     else
     	--print( "Polled message server successfully...")
     	--print ( "RESPONSE: " .. event.response )
-        if (event.status == 200) then
+    	--Message to relay to Omid, why are the dev and prod servers working differently? Had to add event.response ~= "" for dev to work
+        if (event.status == 200 and event.response ~= "") then
         	local response = {}
+        	--print("The message for Omid:" .. event.response)
         	response = json.decode(event.response)
         	for i=1,table.getn(response) do
         		if (response[i].channel == _G.channel_id and response[i].data ~= nil) then
@@ -158,9 +185,18 @@ function _G.gameChannelEventHandler(event)
         				event["current_player_count"] = data.player_count
         			elseif (data.event == "game#started") then
         				print ("Game started...")
+        				_G.current_game.status = "started"
         				_G.current_game.game_time = data.time		
+        			elseif (data.event == "game#finished") then
+        				print ("Game finished...")
+        				_G.current_game.status = "finished"
+        				_G.current_game.players = data.players
+        				_G.current_game.vertices = data.vertices
+        			elseif (data.event == "game#check_in") then
+        				print ("Someone broadcasted their location...")
+        				_G.current_game.broadcast_count = _G.current_game.broadcast_count + 1
         			end
-        			--utilities.printTable (data)
+        			utilities.printTable (data)
         			_G.current_game:dispatchEvent(event)
         		end
         	end
@@ -182,14 +218,41 @@ end
 function _G.locationEventHandler( event )
 	if (onSimulator) then
 		local l = {}
-		l["latitude"] = 33.419650
-		l["longitude"] = -111.93357
+		if ( next(_G.current_game) ~= nil  and next(_G.current_game.locations) ~= nil ) then
+			l["latitude"] = _G.current_game.locations[#_G.current_game.locations].latitude + math.random()/1000
+			l["longitude"] = _G.current_game.locations[#_G.current_game.locations].longitude + math.random()/1000
+		else
+			l["latitude"] = 33.419650
+			l["longitude"] = -111.93357	
+		end
 		_G.current_location = l
 	else
 		_G.current_location = event
 	end
+
+	if ( next(_G.current_game) ~= nil ) then
+		_G.current_game:updateDistanceTravelled(_G.current_location)
+	end
 	--print ("LAT: " .. _G.current_location.latitude .. ", LNG: " .. _G.current_location.longitude)
-	_G.map:nearestAddress(_G.current_location.latitude, _G.current_location.longitude)
+	--_G.map:nearestAddress(_G.current_location.latitude, _G.current_location.longitude)
+end
+
+function testDistance()
+	if (onSimulator) then
+		local l = {}
+		if ( next(_G.current_game) ~= nil and next(_G.current_game.locations) ~= nil ) then
+			l["latitude"] = _G.current_game.locations[#_G.current_game.locations].latitude + math.random()/100000
+			l["longitude"] = _G.current_game.locations[#_G.current_game.locations].longitude + math.random()/100000
+		else
+			l["latitude"] = 33.419650
+			l["longitude"] = -111.93357	
+		end
+		_G.current_location = l
+	end
+
+	if ( next(_G.current_game) ~= nil ) then
+		_G.current_game:updateDistanceTravelled(_G.current_location)
+	end
 end
 
 -- event listeners for tab buttons:
@@ -209,6 +272,16 @@ local function onPlayGameView( event )
 		params = {game = game.new(1, 1, 4, 4, _G.default_game_time)},
 	}
 	storyboard.gotoScene( "play_game", options)
+end
+
+
+local function onLossView( event )
+	local options = {
+		effect="slideLeft",
+		time = 300,
+		params = {game = game.new(1, 1, 4, 4, _G.default_game_time)},
+	}
+	storyboard.gotoScene( "loss", options)
 end
 
 local function onJoinGameView( event )
@@ -240,7 +313,7 @@ local tabButtons = {
 	{up=_G.image_path.."bottomMenu_home.png", down=_G.image_path.."bottomMenu_home_over.png", width = 32, height = 32, onPress=onHomeView, selected=true },
 	--{up="icon2.png", down="icon2-down.png", width = 32, height = 32, onPress=onCreateGameView, selected=true },
 	--{up="icon1.png", down="icon1-down.png", width = 32, height = 32, onPress=onJoinGameView, selected=false},
-	--{up=_G.image_path.."bottomMenu_preference.png", down=_G.image_path.."bottomMenu_preference_over.png", width = 32, height = 32, onPress=onPlayGameView, selected=false},
+	--{up=_G.image_path.."bottomMenu_preference.png", down=_G.image_path.."bottomMenu_preference_over.png", width = 32, height = 32, onPress=onLossView, selected=false},
 	{up=_G.image_path.."bottomMenu_mypage.png", down=_G.image_path.."bottomMenu_mypage_over.png", width = 32, height = 32, onPress=onChooseAvatarView, selected=false},
 	{up=_G.image_path.."bottomMenu_preference.png", down=_G.image_path.."bottomMenu_preference_over.png", width = 32, height = 32, onPress=onQuickGameWaitView, selected=false},	
 }
@@ -282,14 +355,51 @@ logo:setReferencePoint(display.CenterReferencePoint)
 
 _G.game_settings = utilities.loadData("scatter_settings.json")
 
-
 if onSimulator or not onSimulator then
 	_G.game_settings = {}
 end
 
-if (_G.game_settings == nil or _G.game_settings.session_id == nil or _G.game_settings.session_id == "") then
-	controller.getSessionID(getSessionIDResponseHandler)
+
+
+local function getDummySession()
+	
+	session_callback = function(event)
+		native.setActivityIndicator(false);
+		if (event.status == 200) then
+		
+			local data = {}
+			local dummy = {}
+			data = json.decode(event.response)
+			print ("New session for dummy player: " .. data["session"])
+			dummy["session_id"] = data["session"]
+			table.insert(_G.dummies, dummy)
+				
+			if ( table.getn(_G.dummies) < 3) then
+				getDummySession()
+			else
+				_G.controller.getSessionID(getSessionIDResponseHandler)
+			end
+		end
+	end
+	
+	_G.controller.getSessionID(session_callback)
 end
+
+
+if _G.debug_mode then
+	_G.dummies = {}
+	print  ("Flooding game with dummy players...")
+	getDummySession()
+	
+else
+	if (_G.game_settings == nil or _G.game_settings.session_id == nil or _G.game_settings.session_id == "") then
+		_G.controller.getSessionID(getSessionIDResponseHandler)
+	end
+end
+
+
+
+
 
 controller.handshakeWithMessageServer(handshakeWithMessageServerEventHandler)
 
@@ -306,4 +416,16 @@ local function run()
 	
 end
 
-timer.performWithDelay(_G.load_time, run, 1)
+--timer.performWithDelay(2000, testDistance, 0)
+
+local onIntroVideoComplete = function(event)
+   print( "intro ended" )
+   run()
+end
+
+if _G.show_intro_video then
+	media.playVideo( _G.video_path .. "intro.mov", false, onIntroVideoComplete )
+else
+	timer.performWithDelay(_G.load_time, run, 1)
+end
+

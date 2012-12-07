@@ -32,6 +32,19 @@ function Utilities.loadData(filename)
     return myTable
 end
 
+function Utilities.getDistanceBetween(l1, l2)
+	local radius = 6371 --of earth in km
+	local dLat = math.rad(l2.latitude-l1.latitude)
+	local dLon = math.rad(l2.longitude-l1.longitude)
+	local lat1 = math.rad(l1.latitude)
+	local lat2 = math.rad(l2.latitude)
+	
+	local a = math.sin(dLat/2) * math.sin(dLat/2) + math.sin(dLon/2) * math.sin(dLon/2) * math.cos(lat1) * math.cos(lat2); 
+	local c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+	local d = radius * c
+	
+	return d
+end
 
 function Utilities.urlEncode(str)
   if (str) then

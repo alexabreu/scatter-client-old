@@ -83,13 +83,13 @@ function scene:createScene( event )
 		id = "cancel_quick_game_button",
         default = _G.image_path .. "btn_cancel.png",
         over = _G.image_path .. "btn_cancel_over.png",
-        width = 130, 
-        height = 50,
+        width = 115, 
+        height = 90,
         onEvent = cancelQuickGameButtonHandler
 	}
 	cancel_quick_game_button:setReferencePoint(display.CenterReferencePoint)
 	cancel_quick_game_button.x = stage.contentWidth/2
-    cancel_quick_game_button.y = _G.tab_bar.y - cancel_quick_game_button.height - 4*_G.gui_padding
+    cancel_quick_game_button.y = _G.tab_bar.y - cancel_quick_game_button.height - 2*_G.gui_padding
 	
 	
 	-- all objects must be added to group (e.g. self.view)
@@ -105,9 +105,7 @@ function scene:enterScene( event )
 	local group = self.view
 	
 	game = event.params.game
-	
-	print ("Waiting for players " .. game.current_player_count .. " of " .. game.total_player_count)
-	
+
 	game:addEventListener( "game#join", newPlayerEventListener )
 	game:addEventListener( "game#leave", playerLeaveEventListener )
 	game:addEventListener( "game#started", gameStartEventListener )
@@ -124,6 +122,7 @@ function scene:exitScene( event )
 	game:removeEventListener( "game#leave", playerLeaveEventListener )
 	game:removeEventListener( "game#started", gameStartEventListener )
 	
+	current_player_count.text = ""
 	
 	-- INSERT code here (e.g. stop timers, remove listenets, unload sounds, etc.)
 	

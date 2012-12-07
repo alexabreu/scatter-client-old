@@ -25,6 +25,34 @@ local new_game_button, join_game_button, quick_game_button
 -----------------------------------------------------------------------------------------
 
 
+
+local function floodGameWithDummies(index)
+	print("Adding fake player to game with index: " .. index)
+	local dummy = _G.dummies[index]
+	local location = {}
+	location["latitude"] = 0
+	location["longitude"] = 0
+	
+	local dummy_quick_game_callback = function(event)
+		native.setActivityIndicator(false)
+		if (event.status == 200) then
+			local data = {}
+		    data = json.decode(event.response)
+		    utilities.printTable(data)
+			if (data ~= nil and data.game ~= nil) then	
+		        if ( data.player_count < data.game.player_count ) then
+		        	floodGameWithDummies(data.game.player_count - data.player_count)
+		        end
+		    else
+		    	print("NO GO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+		    	print(event.response)
+			end
+		end
+	end
+		
+	_G.controller.quickGame(dummy["session_id"], location, dummy_quick_game_callback)
+end
+
 local function quickGameEventHandler(event)
 	native.setActivityIndicator(false)
 	if ( event.isError ) then
@@ -46,7 +74,6 @@ local function quickGameEventHandler(event)
         		_G.channel_id = data.game.channel_id
         		_G.controller.subscribeToGameChannel(_G.client_id, _G.channel_id, _G.subscribeToGameChannelEventHandler)
         		
-        		
 				local options = {
 				    effect = "slideLeft",
 				    time = 300,
@@ -60,8 +87,14 @@ local function quickGameEventHandler(event)
 				    storyboard.gotoScene("play_game", options)
 				end
 				
+				if (_G.debug_mode and data.player_count < data.game.player_count) then
+        			floodGameWithDummies(data.game.player_count - data.player_count)
+        		end
+				
         	else
         		print ("!!! Failed to join quick game. Is player already in another game? !!!")
+        		--Hack to force client to get a new session
+        		_G.controller.getSessionID(_G.getSessionIDResponseHandler)
         	end
         end        
     end
@@ -85,7 +118,7 @@ end
 local quickGameButtonHandler = function (event )
     if event.phase == "release" then
         print( "Pressed play quick game button..." )
-        _G.controller.quickGame(_G.current_location, quickGameEventHandler)
+        _G.controller.quickGame(_G.game_settings.session_id, _G.current_location, quickGameEventHandler)
     end
 end
 
