@@ -19,7 +19,7 @@ _G.message_server = "http://messagescatter.herokuapp.com/faye"
 _G.image_path = "assets/images/"
 _G.video_path = "assets/video/"
 _G.sound_path = "assets/sound/"
-_G.load_time = 2500
+_G.load_time = 3000
 _G.game_end_delay_time = 7500
 _G.default_game_time = 0.1*60
 _G.debug_mode = false
@@ -34,7 +34,7 @@ _G.message_id = 1
 _G.in_game = false
 _G.games_played = {}
 _G.current_game = {}
-_G.show_intro_video = false
+_G.show_intro_video = true
 
 _G.gui_padding = 10
 _G.text_field_height = 30
@@ -66,8 +66,8 @@ local olderVersion = tonumber(string.sub( platformVersion, 1, 1 )) < 4
 
 print ("onSimulator: " .. tostring(onSimulator))
 if onSimulator then
-	_G.app_server = "http://localhost:3000/"
-	_G.message_server = "http://localhost:9292/faye"
+	--_G.app_server = "http://localhost:3000/"
+	--_G.message_server = "http://localhost:9292/faye"
 	_G.load_time = 500
 end
 

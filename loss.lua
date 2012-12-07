@@ -14,6 +14,8 @@ local stage = display.getCurrentStage()
 
 local background, title, continue_button, avatar
 
+local delicious_sound = audio.loadSound(_G.sound_path .. "delicious.aif")
+
 -----------------------------------------------------------------------------------------
 -- BEGINNING OF YOUR IMPLEMENTATION
 -- 
@@ -81,7 +83,11 @@ function scene:enterScene( event )
 	
 	game = event.params.game
 	
+	local function playDeliciousSound()
+		audio.play(delicious_sound)
+	end
 	
+	timer.performWithDelay(1000, playDeliciousSound, 1)
 	
 end
 
