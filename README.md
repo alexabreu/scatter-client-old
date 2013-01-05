@@ -1,4 +1,0 @@
-scatter-client
-==============
-
-scatter-client
