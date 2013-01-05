@@ -189,10 +189,10 @@ local function gameFinishEventListener( event )
 		storyboard.gotoScene("home", options)
 	end
 	
-	if game.didLose(_G.game_settings.user_id) then
+	if game:didLose(_G.game_settings.user_id) == true then
 		print ("You Lost!!!")
 		timer.performWithDelay(_G.game_end_delay_time, showLoss, 1)
-	elseif game.hasLoser() then
+	elseif game:hasLoser() == true then
 		print ("You're one of the winners")
 		timer.performWithDelay(_G.game_end_delay_time, showWin, 1)
 	else

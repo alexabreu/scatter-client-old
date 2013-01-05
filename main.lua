@@ -34,7 +34,7 @@ _G.message_id = 1
 _G.in_game = false
 _G.games_played = {}
 _G.current_game = {}
-_G.show_intro_video = true
+_G.show_intro_video = false
 
 _G.gui_padding = 10
 _G.text_field_height = 30

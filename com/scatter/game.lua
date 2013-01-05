@@ -77,6 +77,7 @@ function Game.new(id, channel_id, total_player_count, current_player_count, game
     	local did_lose = true
     	for i=1, #base["vertices"] do
     		if  user_id == base["vertices"][i] then
+    			print("Good job amigo, you did not lose!!!!!!!")
     			did_lose = false
     		end
     	end
